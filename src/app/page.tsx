@@ -495,7 +495,7 @@ export default function Home() {
                     className={[
                       "h-[clamp(44px,7dvh,58px)] sm:h-[clamp(52px,7.5dvh,68px)] rounded-md flex items-center justify-center font-bold select-none min-w-0",
                       "transition-colors duration-200 cursor-pointer active:scale-95",
-                      isWide ? "text-xs sm:text-base" : "text-sm sm:text-xl",
+                      isWide ? "text-xs sm:text-base" : "text-lg sm:text-xl",
                       status
                         ? KEY_STATUS[status]
                         : "bg-[#cbd5e1] text-slate-700 hover:bg-[#b8c4d4] dark:bg-[#3a3a3c] dark:text-white dark:hover:bg-[#4a4a4c]",
