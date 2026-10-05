@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getRandomWord, WordItem } from "@/lib/words";
+import { cargarValidas, getRandomWord, normalizeWord, WordItem } from "@/lib/words";
 
 const MAX_ATTEMPTS = 6;
 
@@ -52,15 +52,20 @@ function checkWord(guess: string, secret: string): LetterResult[] {
 }
 
 /* ---------- Iconos ---------- */
-const HelpIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 17h-2v-2h2v2Zm2.07-7.75-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26A2 2 0 1 0 10 9H8a4 4 0 1 1 7.07 2.25Z" />
-  </svg>
-);
-
-const StatsIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-    <path d="M5 9.2h3V19H5V9.2ZM10.6 5h2.8v14h-2.8V5Zm5.6 8H19v6h-2.8v-6Z" />
+const RefreshIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="w-4 h-4 text-[#00875a] dark:text-[#43a047]"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.4}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M8 16H3v5" />
   </svg>
 );
 
@@ -89,18 +94,6 @@ const BackspaceIcon = () => (
   </svg>
 );
 
-const InfoIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z" />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2Z" />
-  </svg>
-);
-
 export default function Home() {
   const [selectedLength, setSelectedLength] = useState<number>(5);
   const [secretWord, setSecretWord] = useState<WordItem | null>(null);
@@ -110,6 +103,8 @@ export default function Home() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  /* Diccionario de palabras válidas del largo actual (se carga bajo demanda) */
+  const [validWords, setValidWords] = useState<{ largo: number; set: Set<string> } | null>(null);
 
   /* WORD_LENGTH se calcula dinámicamente según la palabra secreta seleccionada o la longitud elegida */
   const WORD_LENGTH = secretWord ? secretWord.normalized.length : selectedLength;
@@ -121,6 +116,19 @@ export default function Home() {
   useEffect(() => {
     setSecretWord(getRandomWord(selectedLength));
   }, []);
+
+  /* Cargar el diccionario de validación del largo que se está jugando */
+  useEffect(() => {
+    let cancelado = false;
+    cargarValidas(WORD_LENGTH)
+      .then((set) => {
+        if (!cancelado) setValidWords({ largo: WORD_LENGTH, set });
+      })
+      .catch(console.error);
+    return () => {
+      cancelado = true;
+    };
+  }, [WORD_LENGTH]);
 
   /* ---------- Tema ---------- */
   useEffect(() => {
@@ -142,6 +150,14 @@ export default function Home() {
       setError(`La palabra debe tener exactamente ${WORD_LENGTH} letras.`);
       return;
     }
+    if (!validWords || validWords.largo !== WORD_LENGTH) {
+      setError("Cargando diccionario… probá de nuevo en un instante.");
+      return;
+    }
+    if (!validWords.set.has(normalizeWord(upper))) {
+      setError("Esa palabra no está en el diccionario.");
+      return;
+    }
     setError("");
     const result = checkWord(upper, secretTarget);
     const newAttempts = [...attempts, result];
@@ -149,7 +165,7 @@ export default function Home() {
     setCurrentInput("");
     if (upper === secretTarget) setWon(true);
     else if (newAttempts.length >= MAX_ATTEMPTS) setGameOver(true);
-  }, [attempts, currentInput, isGameFinished, secretTarget, WORD_LENGTH]);
+  }, [attempts, currentInput, isGameFinished, secretTarget, WORD_LENGTH, validWords]);
 
   const handleKey = useCallback(
     (key: string) => {
@@ -210,37 +226,37 @@ export default function Home() {
     }
   });
 
-  const iconBtn =
-    "p-2 rounded-full text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-pointer";
-
   return (
     <div className="min-h-screen flex flex-col bg-[#eef2f7] dark:bg-[#121212] transition-colors duration-300">
       {/* ---------- Header ---------- */}
-      <header className="border-b border-transparent dark:border-[#1f1f1f]">
-        <div className="max-w-lg mx-auto flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2">
-            <button className={iconBtn} aria-label="Ayuda">
-              <HelpIcon />
-            </button>
-            <button className={iconBtn} aria-label="Estadísticas">
-              <StatsIcon />
-            </button>
-          </div>
-
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+      <header className="w-full pt-3 pb-1">
+        <div className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-8 h-14 relative">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:absolute sm:left-1/2 sm:-translate-x-1/2 select-none">
             WORDCLUE
           </h1>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+            <button
+              onClick={() => handleReset()}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#1e1e20] border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:bg-slate-50 dark:hover:bg-[#28282b] transition-all text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold cursor-pointer active:scale-95"
+            >
+              <RefreshIcon />
+              <span>Nuevo juego</span>
+            </button>
+
             <button
               onClick={() => setDarkMode((d) => !d)}
-              className={iconBtn}
+              className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
               aria-label={darkMode ? "Modo claro" : "Modo oscuro"}
               title={darkMode ? "Modo claro" : "Modo oscuro"}
             >
               {darkMode ? <SunIcon /> : <MoonIcon />}
             </button>
-            <button className={iconBtn} aria-label="Configuración">
+
+            <button
+              className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Configuración"
+            >
               <GearIcon />
             </button>
           </div>
@@ -250,24 +266,26 @@ export default function Home() {
       {/* ---------- Main ---------- */}
       <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 py-6">
         {/* Selector de cantidad de letras */}
-        <div className="flex items-center gap-2 bg-[#e2e8f0]/60 dark:bg-[#232325] px-4 py-1.5 rounded-full shadow-sm">
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-400 tracking-wider">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">
             LETRAS:
           </span>
-          {[5, 6, 7].map((len) => (
-            <button
-              key={len}
-              onClick={() => handleLengthChange(len)}
-              className={[
-                "w-8 h-8 flex items-center justify-center text-xs font-extrabold rounded-full transition-all duration-200 cursor-pointer",
-                selectedLength === len
-                  ? "bg-[#4a7c59] text-white shadow-md dark:bg-[#43a047]"
-                  : "text-slate-600 hover:bg-slate-300/60 dark:text-slate-400 dark:hover:bg-[#3a3a3c]",
-              ].join(" ")}
-            >
-              {len}
-            </button>
-          ))}
+          <div className="flex items-center gap-1 bg-[#dfe5ec] dark:bg-[#232325] p-1 rounded-full shadow-xs">
+            {[5, 6, 7].map((len) => (
+              <button
+                key={len}
+                onClick={() => handleLengthChange(len)}
+                className={[
+                  "w-7 h-7 flex items-center justify-center text-xs font-extrabold rounded-full transition-all duration-200 cursor-pointer",
+                  selectedLength === len
+                    ? "bg-[#00875a] text-white shadow-sm dark:bg-[#43a047]"
+                    : "text-slate-600 hover:bg-slate-300/50 dark:text-slate-400 dark:hover:bg-[#3a3a3c]",
+                ].join(" ")}
+              >
+                {len}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tablero */}
@@ -327,12 +345,12 @@ export default function Home() {
         {/* Mensajes de fin de juego */}
         {won && (
           <p className="text-[#4a7c59] dark:text-[#43a047] font-semibold text-lg">
-            🎉 ¡Correcto! La palabra era {secretWord?.normalized}.
+            🎉 ¡Correcto! La palabra era {secretWord?.raw.toUpperCase()}.
           </p>
         )}
         {gameOver && !won && (
           <p className="text-red-600 dark:text-red-400 font-semibold text-lg">
-            😞 Perdiste. La palabra era <strong>{secretWord?.normalized}</strong>.
+            😞 Perdiste. La palabra era <strong>{secretWord?.raw.toUpperCase()}</strong>.
           </p>
         )}
 
@@ -365,27 +383,6 @@ export default function Home() {
           ))}
         </div>
       </main>
-
-      {/* ---------- Footer ---------- */}
-      <footer className="border-t border-[#e2e8f0] dark:border-[#1f1f1f]">
-        <div className="max-w-2xl mx-auto flex items-center justify-between px-8 h-16">
-          <button className="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer">
-            <InfoIcon />
-            <span className="text-[10px] font-semibold tracking-widest">
-              INSTRUCCIONES
-            </span>
-          </button>
-          <button
-            onClick={() => handleReset()}
-            className="flex flex-col items-center gap-1 text-[#4a7c59] hover:text-[#3a6347] dark:text-[#43a047] dark:hover:text-[#5cbf60] transition-colors cursor-pointer"
-          >
-            <PlusIcon />
-            <span className="text-[10px] font-semibold tracking-widest">
-              NUEVO JUEGO
-            </span>
-          </button>
-        </div>
-      </footer>
     </div>
   );
 }

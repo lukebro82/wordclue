@@ -157,3 +157,42 @@ export function getAvailableLengths(): number[] {
   const lengths = new Set(WORDS.map((w) => normalizeWord(w).length));
   return Array.from(lengths).sort((a, b) => a - b);
 }
+
+/* ---------- Diccionario para VALIDAR lo que escribe el jugador ----------
+ * Las palabras secretas salen de WORDS (lista curada, arriba). En cambio, lo que
+ * el jugador puede escribir se valida contra una lista grande de palabras en
+ * español, generada con `npm run generar:diccionario`. Se carga solo para el
+ * largo que se está jugando (un archivo aparte por largo).
+ */
+type Modulo = { default: string[] };
+
+// Un cargador explícito por largo: así el bundler separa cada lista en su
+// propio archivo y el navegador solo baja la que hace falta.
+const CARGADORES: Record<number, () => Promise<Modulo>> = {
+  5: () => import("../data/palabras-validas-5.json"),
+  6: () => import("../data/palabras-validas-6.json"),
+  7: () => import("../data/palabras-validas-7.json"),
+};
+
+const cacheValidas = new Map<number, Promise<Set<string>>>();
+
+/**
+ * Devuelve el conjunto de palabras válidas (MAYÚSCULAS, sin tildes) de ese largo.
+ * Siempre incluye las palabras de WORDS, así la palabra secreta nunca puede
+ * quedar fuera de lo que el jugador tiene permitido escribir.
+ */
+export function cargarValidas(largo: number): Promise<Set<string>> {
+  let pendiente = cacheValidas.get(largo);
+  if (!pendiente) {
+    const cargador = CARGADORES[largo];
+    if (!cargador) {
+      return Promise.reject(new Error(`No hay diccionario de ${largo} letras`));
+    }
+    pendiente = cargador().then((modulo) => {
+      const propias = WORDS.map(normalizeWord).filter((w) => w.length === largo);
+      return new Set<string>([...modulo.default, ...propias]);
+    });
+    cacheValidas.set(largo, pendiente);
+  }
+  return pendiente;
+}
