@@ -254,7 +254,7 @@ export default function Home() {
           <span className="text-xs font-bold text-slate-600 dark:text-slate-400 tracking-wider">
             LETRAS:
           </span>
-          {[4, 5, 6].map((len) => (
+          {[5, 6, 7].map((len) => (
             <button
               key={len}
               onClick={() => handleLengthChange(len)}
@@ -278,7 +278,7 @@ export default function Home() {
               const isCurrentRow = rowIndex === currentRow && !isGameFinished;
 
               return (
-                <div key={rowIndex} className="flex gap-2">
+                <div key={rowIndex} className="flex gap-1.5 sm:gap-2">
                   {Array.from({ length: WORD_LENGTH }).map((_, colIndex) => {
                     const cell = attempt?.[colIndex];
                     const typedLetter = isCurrentRow
@@ -292,8 +292,8 @@ export default function Home() {
                       <div
                         key={colIndex}
                         className={[
-                          "w-[52px] h-[52px] flex items-center justify-center rounded-md",
-                          "text-2xl font-bold select-none transition-colors duration-300",
+                          "w-10 h-10 sm:w-[52px] sm:h-[52px] flex items-center justify-center rounded-md",
+                          "text-xl sm:text-2xl font-bold select-none transition-colors duration-300",
                           cell
                             ? CELL_STATUS[cell.status]
                             : isActive
