@@ -257,7 +257,7 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#eef2f7] dark:bg-[#121212] transition-colors duration-300">
+    <div className="h-dvh flex flex-col bg-[#eef2f7] dark:bg-[#121212] transition-colors duration-300">
       {/* ---------- Header ---------- */}
       <header className="w-full pt-2 sm:pt-3 pb-1">
         <div className="max-w-4xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-2 sm:px-8 h-12 sm:h-14 gap-1">
@@ -323,7 +323,7 @@ export default function Home() {
       </header>
 
       {/* ---------- Main ---------- */}
-      <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 py-6">
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3 sm:gap-4 px-3 sm:px-6 pb-3 sm:pb-6 [--reserved:calc(176px+3*clamp(44px,7dvh,58px))] sm:[--reserved:calc(204px+3*clamp(52px,7.5dvh,68px))]">
         {/* Selector de cantidad de letras */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">
@@ -347,15 +347,37 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Tablero */}
-        <div className="relative">
-          <div className="p-3 rounded-xl bg-[#e2e8f0]/60 dark:bg-[#232325] flex flex-col gap-2.5">
+        {/* Tablero: se ajusta al alto disponible manteniendo la proporción */}
+        <div
+          className="relative w-full flex justify-center"
+          style={{ containerType: "inline-size" }}
+        >
+          <div
+            className={[
+              "p-2 sm:p-3 rounded-xl bg-[#e2e8f0]/60 dark:bg-[#232325] grid gap-1.5 sm:gap-2 box-border",
+              /* Mobile: todo el ancho, alto disponible (celdas hasta 1.3x más altas que anchas) */
+              "w-[100cqw] h-[min(calc(100dvh-var(--reserved)),calc(100cqw*6/var(--w)*1.3))] text-[length:calc(100cqw/var(--w)*0.45)]",
+              /* Desktop: proporción fija ajustada al alto disponible */
+              "sm:w-[min(100cqw,calc((100dvh-var(--reserved))*var(--w)/6))] sm:h-auto sm:text-[length:calc(min(100cqw,calc((100dvh-var(--reserved))*var(--w)/6))/var(--w)*0.45)]",
+            ].join(" ")}
+            style={
+              {
+                "--w": WORD_LENGTH,
+                aspectRatio: `${WORD_LENGTH} / ${MAX_ATTEMPTS}`,
+                gridTemplateRows: `repeat(${MAX_ATTEMPTS}, minmax(0, 1fr))`,
+              } as React.CSSProperties
+            }
+          >
             {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIndex) => {
               const attempt = attempts[rowIndex];
               const isCurrentRow = rowIndex === currentRow && !isGameFinished;
 
               return (
-                <div key={rowIndex} className="flex gap-1.5 sm:gap-2">
+                <div
+                  key={rowIndex}
+                  className="grid gap-1.5 sm:gap-2 min-h-0"
+                  style={{ gridTemplateColumns: `repeat(${WORD_LENGTH}, minmax(0, 1fr))` }}
+                >
                   {Array.from({ length: WORD_LENGTH }).map((_, colIndex) => {
                     const cell = attempt?.[colIndex];
                     const typedLetter = isCurrentRow
@@ -369,8 +391,8 @@ export default function Home() {
                       <div
                         key={colIndex}
                         className={[
-                          "w-10 h-10 sm:w-[52px] sm:h-[52px] flex items-center justify-center rounded-md",
-                          "text-xl sm:text-2xl font-bold select-none transition-colors duration-300",
+                          "w-full h-full min-h-0 flex items-center justify-center rounded-md",
+                          "font-bold select-none transition-colors duration-300",
                           cell
                             ? CELL_STATUS[cell.status]
                             : isActive
@@ -381,7 +403,7 @@ export default function Home() {
                         ].join(" ")}
                       >
                         {isActive ? (
-                          <span className="caret-blink w-px h-6 bg-[#4a7c59] dark:bg-[#43a047]" />
+                          <span className="caret-blink w-px h-[1em] bg-[#4a7c59] dark:bg-[#43a047]" />
                         ) : (
                           letter
                         )}
@@ -395,7 +417,7 @@ export default function Home() {
 
           {/* Mensaje de error (toast) */}
           {error && (
-            <div className="absolute left-1/2 -top-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white dark:bg-white dark:text-black text-sm font-semibold px-4 py-2 shadow-lg">
+            <div className="absolute left-1/2 top-2 -translate-x-1/2 z-10 max-w-[95%] text-center rounded-md bg-slate-900 text-white dark:bg-white dark:text-black text-sm font-semibold px-4 py-2 shadow-lg">
               {error}
             </div>
           )}
@@ -403,20 +425,24 @@ export default function Home() {
 
         {/* Mensajes de fin de juego */}
         {won && (
-          <p className="text-[#4a7c59] dark:text-[#43a047] font-semibold text-lg">
+          <p className="text-[#4a7c59] dark:text-[#43a047] font-semibold text-base sm:text-lg text-center">
             🎉 ¡Correcto! La palabra era {secretWord?.raw.toUpperCase()}.
           </p>
         )}
         {gameOver && !won && (
-          <p className="text-red-600 dark:text-red-400 font-semibold text-lg">
+          <p className="text-red-600 dark:text-red-400 font-semibold text-base sm:text-lg text-center">
             😞 Perdiste. La palabra era <strong>{secretWord?.raw.toUpperCase()}</strong>.
           </p>
         )}
 
-        {/* Teclado virtual */}
-        <div className="w-full max-w-lg p-3 rounded-xl bg-[#e2e8f0]/60 dark:bg-[#232325] flex flex-col gap-2">
+        {/* Teclado virtual: ocupa todo el ancho disponible */}
+        <div className="w-full max-w-3xl p-2 sm:p-3 rounded-xl bg-[#e2e8f0]/60 dark:bg-[#232325] flex flex-col gap-1.5 sm:gap-2">
           {KEYBOARD_ROWS.map((row, i) => (
-            <div key={i} className="flex justify-center gap-1.5">
+            <div
+              key={i}
+              className="grid gap-1 sm:gap-2"
+              style={{ gridTemplateColumns: "repeat(20, minmax(0, 1fr))" }}
+            >
               {row.map((key) => {
                 const isWide = key === "ENTER";
                 const status = keyStatuses[key];
@@ -424,10 +450,11 @@ export default function Home() {
                   <button
                     key={key}
                     onClick={() => handleKey(key)}
+                    style={{ gridColumn: isWide ? "span 4" : "span 2" }}
                     className={[
-                      "h-11 rounded-md flex items-center justify-center font-bold select-none",
+                      "h-[clamp(44px,7dvh,58px)] sm:h-[clamp(52px,7.5dvh,68px)] rounded-md flex items-center justify-center font-bold select-none min-w-0",
                       "transition-colors duration-200 cursor-pointer active:scale-95",
-                      isWide ? "flex-[2] max-w-[78px] text-[11px]" : "flex-1 max-w-9 text-xs",
+                      isWide ? "text-xs sm:text-base" : "text-sm sm:text-xl",
                       status
                         ? KEY_STATUS[status]
                         : "bg-[#cbd5e1] text-slate-700 hover:bg-[#b8c4d4] dark:bg-[#3a3a3c] dark:text-white dark:hover:bg-[#4a4a4c]",
