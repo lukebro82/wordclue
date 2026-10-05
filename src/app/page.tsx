@@ -256,7 +256,7 @@ export default function Home() {
   /* Abrir el modal de resultado un instante después de terminar la partida */
   useEffect(() => {
     if (!won && !gameOver) return;
-    const t = setTimeout(() => setShowResult(true), 800);
+    const t = setTimeout(() => setShowResult(true), 500);
     return () => clearTimeout(t);
   }, [won, gameOver]);
 
