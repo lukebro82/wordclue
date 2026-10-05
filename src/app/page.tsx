@@ -106,6 +106,12 @@ const BackspaceIcon = () => (
   </svg>
 );
 
+const PlusSignIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
 const CloseIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 6 6 18M6 6l12 12" />
@@ -253,9 +259,9 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-[#eef2f7] dark:bg-[#121212] transition-colors duration-300">
       {/* ---------- Header ---------- */}
-      <header className="w-full pt-3 pb-1">
-        <div className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-8 h-14 relative">
-          <div className="flex items-center gap-1 sm:gap-2">
+      <header className="w-full pt-2 sm:pt-3 pb-1">
+        <div className="max-w-4xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-2 sm:px-8 h-12 sm:h-14 gap-1">
+          <div className="flex items-center justify-start gap-0.5 sm:gap-2">
             <button
               onClick={() => setShowHelp(true)}
               className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
@@ -273,14 +279,25 @@ export default function Home() {
             </button>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2 select-none">
+          <h1 className="text-lg min-[400px]:text-xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white select-none text-center">
             WORDCLUE
           </h1>
 
-          <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+          <div className="flex items-center justify-end gap-0.5 sm:gap-4">
+            {/* Mobile: botón circular verde con "+" blanco */}
             <button
               onClick={() => handleReset()}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#1e1e20] border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:bg-slate-50 dark:hover:bg-[#28282b] transition-all text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold cursor-pointer active:scale-95"
+              className="sm:hidden w-8 h-8 mr-0.5 flex items-center justify-center rounded-full bg-[#00875a] dark:bg-[#43a047] text-white shadow-md hover:brightness-110 transition-all cursor-pointer active:scale-90"
+              aria-label="Nuevo juego"
+              title="Nuevo juego"
+            >
+              <PlusSignIcon />
+            </button>
+
+            {/* Desktop: botón píldora con texto */}
+            <button
+              onClick={() => handleReset()}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#1e1e20] border border-slate-200/90 dark:border-slate-700/80 shadow-xs hover:bg-slate-50 dark:hover:bg-[#28282b] transition-all text-slate-700 dark:text-slate-200 text-sm font-semibold cursor-pointer active:scale-95"
             >
               <RefreshIcon />
               <span>Nuevo juego</span>
