@@ -58,14 +58,18 @@ export const WORDS: string[] = [
 ];
 
 /**
- * Normaliza una palabra eliminando acentos y convirtiéndola a mayúsculas.
- * Ej: "Árbol" -> "ARBOL"
+ * Normaliza una palabra eliminando acentos y diéresis, convirtiéndola a mayúsculas.
+ * Respeta la letra Ñ.
+ * Ej: "Árbol" -> "ARBOL", "Sueño" -> "SUEÑO", "Pingüino" -> "PINGUINO"
  */
 export function normalizeWord(word: string): string {
   return word
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
+    .toUpperCase()
+    .replace(/[ÁÄ]/g, "A")
+    .replace(/[ÉË]/g, "E")
+    .replace(/[ÍÏ]/g, "I")
+    .replace(/[ÓÖ]/g, "O")
+    .replace(/[ÚÜ]/g, "U");
 }
 
 /**
