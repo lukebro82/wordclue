@@ -52,6 +52,18 @@ function checkWord(guess: string, secret: string): LetterResult[] {
 }
 
 /* ---------- Iconos ---------- */
+const HelpIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 17h-2v-2h2v2Zm2.07-7.75-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26A2 2 0 1 0 10 9H8a4 4 0 1 1 7.07 2.25Z" />
+  </svg>
+);
+
+const StatsIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+    <path d="M5 9.2h3V19H5V9.2ZM10.6 5h2.8v14h-2.8V5Zm5.6 8H19v6h-2.8v-6Z" />
+  </svg>
+);
+
 const RefreshIcon = () => (
   <svg
     viewBox="0 0 24 24"
@@ -94,6 +106,12 @@ const BackspaceIcon = () => (
   </svg>
 );
 
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);
+
 export default function Home() {
   const [selectedLength, setSelectedLength] = useState<number>(5);
   const [secretWord, setSecretWord] = useState<WordItem | null>(null);
@@ -103,6 +121,7 @@ export default function Home() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   /* Diccionario de palabras válidas del largo actual (se carga bajo demanda) */
   const [validWords, setValidWords] = useState<{ largo: number; set: Set<string> } | null>(null);
 
@@ -189,6 +208,11 @@ export default function Home() {
   /* Teclado físico */
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showHelp) {
+        setShowHelp(false);
+        return;
+      }
+      if (showHelp) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       // Evita que Enter/Espacio activen el botón que quedó con foco
       if (e.key === "Enter" || e.key === " " || e.key === "Backspace") {
@@ -200,7 +224,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleKey]);
+  }, [handleKey, showHelp]);
 
   const handleReset = (targetLength?: number) => {
     const len = targetLength ?? selectedLength;
@@ -231,7 +255,25 @@ export default function Home() {
       {/* ---------- Header ---------- */}
       <header className="w-full pt-3 pb-1">
         <div className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-8 h-14 relative">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:absolute sm:left-1/2 sm:-translate-x-1/2 select-none">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => setShowHelp(true)}
+              className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Cómo jugar"
+              title="¿Cómo jugar?"
+            >
+              <HelpIcon />
+            </button>
+            <button
+              className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Estadísticas"
+              title="Estadísticas"
+            >
+              <StatsIcon />
+            </button>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2 select-none">
             WORDCLUE
           </h1>
 
@@ -383,6 +425,133 @@ export default function Home() {
           ))}
         </div>
       </main>
+
+      {/* ---------- Modal de Ayuda / Instrucciones ---------- */}
+      {showHelp && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setShowHelp(false)}
+        >
+          <div
+            className="relative w-full max-w-md bg-white dark:bg-[#1a1a1c] text-slate-900 dark:text-slate-100 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-[#2d2d30] flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del modal */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                ¿CÓMO JUGAR?
+              </h2>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#28282c] transition-colors cursor-pointer"
+                aria-label="Cerrar modal"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            {/* Reglas breves */}
+            <div className="text-sm text-slate-600 dark:text-slate-300 space-y-2">
+              <p>
+                Adivina la palabra oculta en <strong>{MAX_ATTEMPTS} intentos</strong>.
+              </p>
+              <p>
+                Cada intento debe ser una palabra válida. Presiona <strong>ENTER</strong> para enviar.
+              </p>
+              <p>
+                Después de cada intento, el color de las fichas cambiará para mostrar qué tan cerca estás de acertar:
+              </p>
+            </div>
+
+            {/* Ejemplos visuales */}
+            <div className="space-y-3.5 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                EJEMPLOS
+              </span>
+
+              {/* Ejemplo Verde */}
+              <div className="space-y-1.5">
+                <div className="flex gap-1.5">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-[#4a7c59] text-white dark:bg-[#43a047]">
+                    G
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    A
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    T
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    O
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    S
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  La letra <strong className="text-slate-900 dark:text-white">G</strong> está en la palabra y en la <strong>posición correcta</strong>.
+                </p>
+              </div>
+
+              {/* Ejemplo Amarillo */}
+              <div className="space-y-1.5">
+                <div className="flex gap-1.5">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    P
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-[#c9a55a] text-white dark:bg-[#ffd600] dark:text-black">
+                    I
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    S
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    T
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    A
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  La letra <strong className="text-slate-900 dark:text-white">I</strong> está en la palabra pero en una <strong>posición diferente</strong>.
+                </p>
+              </div>
+
+              {/* Ejemplo Gris */}
+              <div className="space-y-1.5">
+                <div className="flex gap-1.5">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    N
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    U
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    B
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-[#94a3b8] text-white dark:bg-[#546e7a]">
+                    E
+                  </div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-md font-bold text-base sm:text-lg bg-white border border-slate-300 text-slate-900 dark:bg-[#141414] dark:border-[#333] dark:text-white">
+                    S
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  La letra <strong className="text-slate-900 dark:text-white">E</strong> <strong>no forma parte</strong> de la palabra secreta.
+                </p>
+              </div>
+            </div>
+
+            {/* Botón de acción */}
+            <button
+              onClick={() => setShowHelp(false)}
+              className="mt-2 w-full py-2.5 rounded-xl bg-[#00875a] hover:bg-[#00704a] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-98"
+            >
+              ¡Entendido, a jugar!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
