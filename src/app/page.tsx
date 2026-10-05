@@ -486,6 +486,7 @@ export default function Home() {
             >
               {row.map((key) => {
                 const isWide = key === "ENTER";
+                const isSpecial = key === "ENTER" || key === "BACKSPACE";
                 const status = keyStatuses[key];
                 return (
                   <button
@@ -495,10 +496,12 @@ export default function Home() {
                     className={[
                       "h-[clamp(44px,7dvh,58px)] sm:h-[clamp(52px,7.5dvh,68px)] rounded-md flex items-center justify-center font-bold select-none min-w-0",
                       "transition-colors duration-200 cursor-pointer active:scale-95",
-                      isWide ? "text-xs sm:text-base" : "text-lg sm:text-xl",
+                      isWide ? "text-xs sm:text-base font-extrabold" : "text-lg sm:text-xl",
                       status
                         ? KEY_STATUS[status]
-                        : "bg-[#cbd5e1] text-slate-700 hover:bg-[#b8c4d4] dark:bg-[#3a3a3c] dark:text-white dark:hover:bg-[#4a4a4c]",
+                        : isSpecial
+                          ? "bg-[#94a3b8] text-slate-900 hover:bg-[#8393a7] dark:bg-[#475569] dark:text-white dark:hover:bg-[#526377] shadow-xs font-extrabold"
+                          : "bg-[#cbd5e1] text-slate-700 hover:bg-[#b8c4d4] dark:bg-[#3a3a3c] dark:text-white dark:hover:bg-[#4a4a4c]",
                     ].join(" ")}
                     aria-label={key === "BACKSPACE" ? "Borrar" : key}
                   >
