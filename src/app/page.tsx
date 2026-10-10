@@ -312,7 +312,7 @@ export default function Home() {
       {/* ---------- Header ---------- */}
       <header className="w-full pt-2 sm:pt-3 pb-1">
         <div className="max-w-4xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-2 sm:px-8 h-12 sm:h-14 gap-1">
-          <div className="flex items-center justify-start gap-0.5 sm:gap-2">
+          <div className="flex items-center justify-start gap-0.5 sm:gap-2 max-sm:[&_svg]:w-6 max-sm:[&_svg]:h-6">
             <button
               onClick={() => setShowHelp(true)}
               className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
@@ -334,11 +334,11 @@ export default function Home() {
             WORDCLUE
           </h1>
 
-          <div className="flex items-center justify-end gap-0.5 sm:gap-4">
+          <div className="flex items-center justify-end gap-0.5 sm:gap-4 max-sm:[&_svg]:w-6 max-sm:[&_svg]:h-6">
             {/* Mobile: botón circular verde con "+" blanco */}
             <button
               onClick={() => handleReset()}
-              className="sm:hidden w-8 h-8 mr-0.5 flex items-center justify-center rounded-full bg-[#00875a] dark:bg-[#43a047] text-white shadow-md hover:brightness-110 transition-all cursor-pointer active:scale-90"
+              className="sm:hidden w-9 h-9 mr-0.5 flex items-center justify-center rounded-full bg-[#00875a] dark:bg-[#43a047] text-white shadow-md hover:brightness-110 transition-all cursor-pointer active:scale-90"
               aria-label="Nuevo juego"
               title="Nuevo juego"
             >
